@@ -33,7 +33,7 @@ int main(int argc, char** argv ){
   // create a blank image (black image)
   cv::Mat mask = cv::Mat::zeros(image.size(), CV_8UC3); 
   
-  for(int i = 0; i < contour_list.size(); i++) {
+  for(size_t i = 0; i < contour_list.size(); i++) {
     cv::Scalar color_contours{255, 255, 255}; 
     drawContours(mask, contour_list, i, color_contours, -1, 8, std::vector<cv::Vec4i>(), 0, cv::Point());
   }

@@ -6,9 +6,11 @@ include(FetchContent)
 #include(CTest)
 #enable_testing()
 set(CMAKE_INSTALL_MESSAGE LAZY) # suppress some install messages
-set(CMAKE_CXX_STANDARD 17) # use c++ 17
+set(CMAKE_CXX_STANDARD 14) # use c++ 17
 set(CMAKE_CXX_STANDARD_REQUIRED ON) 
 set(CMAKE_CXX_EXTENSIONS OFF) # turn off compiler extensions
+
+add_compile_options(-Wall -Wextra -pedantic -Werror)
 
 find_package(OpenCV REQUIRED )
 
@@ -31,7 +33,10 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 add_subdirectory(src)
 
-
-set(CPACK_PROJECT_NAME ${PROJECT_NAME})
-set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
-include(CPack)
+install(
+  DIRECTORY 
+    test_images
+    test_videos 
+  DESTINATION 
+    ${CMAKE_INSTALL_BINDIR}
+)
