@@ -59,7 +59,7 @@ _CMake_
 If the correct versions of CMake and OpenCV are installed, then building is as simple as 
 
 ```
-$> git clone https://github.com/jasonbeach/UdacitySelfDrivingCars.git
+$> git clone https://github.com/jasonbeach/UdacitySelfDrivingCarsProject1.git
 $> cd UdacitySelfDrivingCars
 $> mkdir build
 $> cd build
@@ -71,7 +71,7 @@ _Docker_
 
 If you have docker installed, building is simply:
 ```
-$> git clone https://github.com/jasonbeach/UdacitySelfDrivingCars.git
+$> git clone https://github.com/jasonbeach/UdacitySelfDrivingCarsProject1.git
 $> cd UdacitySelfDrivingCars
 $> ./build.sh
 ```
