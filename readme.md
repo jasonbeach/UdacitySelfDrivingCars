@@ -84,12 +84,12 @@ _Usage_
 If the software was not built with _Docker_, then to run the software:
 ```
 $> cd ${clone dir}/install/bin
-$> ./FindLaneProject [-ltcf] [path to video file]
+$> ./p1_finding_lane_lines [-ltcf] [path to video file]
 ```
 
 With _Docker_, a convience script is provided to run the software:
 ```
 $> cd ${clone dir}
-$> ./find_lanes.sh [-ltcf] [path to video file]
+$> ./p1_finding_lane_lines.sh [-ltcf] [path to video file]
 ```
 The flags in both cases are the same and are optional. The `-l` flag causes the software to loop the video continuously and not record an output video.  The `-f` flag allows you to specify the video file to run.  If no video file is specified the software will attempt to use the `challenge.mp4` video. Note that in the Docker case the video file specified should be a relative path that is relative to the install/bin directory. The `-t` flags displays trackbars that can be used to adjust some parameters of the software. The `-c` flag changes the output image to show the output of the canny edge / hough transform output not annotated on the final image.

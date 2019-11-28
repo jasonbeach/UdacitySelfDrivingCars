@@ -1,5 +1,6 @@
 build/
 install/
 pythonenv/
+test_video_output/
 .vscode/c_cpp_properties.json
 .vscode/settings.json

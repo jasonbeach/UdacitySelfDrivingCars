@@ -1,2 +1,3 @@
-add_subdirectory(chap4_computer_vision)
-add_subdirectory(project1_find_lanes)
+add_subdirectory(common)
+add_subdirectory(5_computer_vision_fundamentals)
+add_subdirectory(p1_finding_lane_lines)

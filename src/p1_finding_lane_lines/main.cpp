@@ -1,5 +1,5 @@
 #include "cv_defs.hpp"
-#include "find_lane_helpers.hpp"
+#include "finding_lane_lines.hpp"
 #include "CLI/CLI.hpp"
 #include <chrono>
 
@@ -10,7 +10,7 @@ int main(int argc, char** argv ){
   FindLaneParams params;
   CLI::App app{"Project 1 Find lane lines"};
 
-  std::string file_path = "./test_videos/challenge.mp4";
+  std::string file_path = "./test_videos/project1/challenge.mp4";
 
   app.add_option("-f,--file", file_path, "path to files");
   app.add_flag("-l, --loop", params.loop_video, "continuously loop video");
