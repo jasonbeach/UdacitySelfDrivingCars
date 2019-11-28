@@ -6,3 +6,9 @@ struct CameraPoints{
   std::vector<std::vector<cv::Point2f> > image_points;};
 
 void extractPointsFromImage(cv::Mat img, cv::Size board_size, CameraPoints* cp);
+
+double computeReprojectionErrors(
+  const std::vector< std::vector< cv::Point3f > >& objectPoints,
+  const std::vector< std::vector< cv::Point2f > >& imagePoints,
+  const std::vector< cv::Mat >& rvecs, const std::vector< cv::Mat >& tvecs,
+  const cv::Mat& cameraMatrix , const cv::Mat& distCoeffs);

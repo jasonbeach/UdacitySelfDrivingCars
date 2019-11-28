@@ -11,7 +11,7 @@ int main(int argc, char** argv ){
   
   CLI::App app{"checkerboard"};
 
-  std::string file_path = "./test_images/calibration_test.png";
+  std::string file_path = "./test_images/project2/calibration_test.png";
 
   app.add_option("-f,--file", file_path, "path to files");
   CLI11_PARSE(app, argc, argv);
@@ -46,6 +46,10 @@ int main(int argc, char** argv ){
   fmt::print("image pts size: {} x 2, object pts size: {} x 3\n", 
     cp.image_points.size(), cp.object_points.size());
   cv::calibrateCamera(cp.object_points, cp.image_points, size, K, D, rvecs, tvecs);
+
+  auto re = computeReprojectionErrors(cp.object_points, cp.image_points, rvecs, tvecs, K, D);
+
+  fmt::print("reprojection error: {:.2f}\n", re);
 
   cv::Mat udist_image;
   cv::undistort(image, udist_image, K, D);

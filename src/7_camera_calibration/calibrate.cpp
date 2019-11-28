@@ -25,3 +25,27 @@ void extractPointsFromImage(cv::Mat img, cv::Size board_size, CameraPoints* cp){
 
     cp->object_points.push_back(obj_pts);
     cp->image_points.push_back(corners);}}
+  
+double computeReprojectionErrors(
+  const std::vector< std::vector< cv::Point3f > >& objectPoints,
+  const std::vector< std::vector< cv::Point2f > >& imagePoints,
+  const std::vector< cv::Mat >& rvecs, const std::vector< cv::Mat >& tvecs,
+  const cv::Mat& cameraMatrix , const cv::Mat& distCoeffs) {
+  
+  std::vector< cv::Point2f > imagePoints2;
+  int i, totalPoints = 0;
+  double totalErr = 0, err;
+  std::vector< float > perViewErrors;
+  perViewErrors.resize(objectPoints.size());
+
+  for (i = 0; i < (int)objectPoints.size(); ++i) {
+    cv::projectPoints(cv::Mat(objectPoints[i]), rvecs[i], tvecs[i], cameraMatrix,
+                  distCoeffs, imagePoints2);
+    err = cv::norm(cv::Mat(imagePoints[i]), cv::Mat(imagePoints2), CV_L2);
+    int n = (int)objectPoints[i].size();
+    perViewErrors[i] = (float) std::sqrt(err*err/n);
+    totalErr += err*err;
+    totalPoints += n;
+  }
+  return std::sqrt(totalErr/totalPoints);
+}
