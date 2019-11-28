@@ -1,5 +1,4 @@
 #include "cv_common.hpp"
-#include <opencv2/opencv.hpp>
 
 std::string type2str(int type) {
   std::string r;
