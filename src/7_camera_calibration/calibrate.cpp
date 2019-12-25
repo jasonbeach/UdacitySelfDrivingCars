@@ -3,7 +3,7 @@
 #include "fmt/core.h" 
 #include "fmt/format.h"
 
-void extractPointsFromImage(cv::Mat img, cv::Size board_size, CameraPoints* cp){
+void extractPointsFromImage(cv::Mat img, cv::Size board_size, CameraPoints* cp, bool show_images){
   cv::Mat gray_img;
   cv::cvtColor(img, gray_img, CV_BGR2GRAY);
   
@@ -14,8 +14,12 @@ void extractPointsFromImage(cv::Mat img, cv::Size board_size, CameraPoints* cp){
   if(pattern_found){
     fmt::print("pattern found\n");
     cv::cornerSubPix(gray_img, corners, cv::Size{5,5}, cv::Size{-1,-1}, 
-      cv::TermCriteria(CV_TERMCRIT_EPS | CV_TERMCRIT_ITER, 30, 0.1));
-    cv::drawChessboardCorners(gray_img, board_size, corners, pattern_found);}
+      cv::TermCriteria(CV_TERMCRIT_EPS | CV_TERMCRIT_ITER, 30, 0.1));}
+
+  if(show_images){    
+    cv::drawChessboardCorners(img, board_size, corners, pattern_found);
+    cv::imshow("Image", img);
+    cv::waitKey(0);}
   
   if (pattern_found){
     std::vector<cv::Point3f> obj_pts;
