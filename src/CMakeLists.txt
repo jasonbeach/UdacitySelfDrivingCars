@@ -1,4 +1,5 @@
 add_subdirectory(common)
 add_subdirectory(5_computer_vision_fundamentals)
 add_subdirectory(7_camera_calibration)
+add_subdirectory(8_gradients_and_color_spaces)
 add_subdirectory(p1_finding_lane_lines)

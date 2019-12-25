@@ -7,7 +7,7 @@ include(FetchContent)
 #enable_testing()
 set(CMAKE_INSTALL_MESSAGE LAZY) # suppress some install messages
 
-set(CMAKE_CXX_STANDARD 14) # use c++ 14
+set(CMAKE_CXX_STANDARD 17) # use c++ 17
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(cmake/dependencies.cmake)

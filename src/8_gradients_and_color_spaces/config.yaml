@@ -1,0 +1,27 @@
+#image_file: "test_images/project2/test_images/signs_vehicles_xygrad.png"
+#image_file: "test_images/project2/test_images/straight_lines1.jpg"
+image_file_path: "test_images/project2/test_images"
+K:
+  rows: 3
+  cols: 3
+  type: 6
+  data:
+    - 1157.4374906893522
+    - 0
+    - 662.92867399391832
+    - 0
+    - 1152.0994629248039
+    - 387.90812648966488
+    - 0
+    - 0
+    - 1
+D:
+  rows: 1
+  cols: 5
+  type: 6
+  data:
+    - -0.24538027759859635
+    - -0.045160723273979832
+    - -0.00052012010190602409
+    - 6.2494832328650313e-05
+    - 0.046759052805168545
