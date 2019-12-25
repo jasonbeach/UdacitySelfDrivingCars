@@ -21,10 +21,20 @@ target_link_libraries(c7_calibrate_camera
   CLI11::CLI11
   yaml-cpp)
 
+##################### c7 perspective transform ######################
+add_executable(c7_perspective_transform
+  perspective.cpp)
+
+target_link_libraries(c7_perspective_transform
+  jbeach::cv_common
+  fmt::fmt
+  CLI11::CLI11
+  yaml-cpp)
 
 install(TARGETS 
   c7_checkerboard
   c7_calibrate_camera
+  c7_perspective_transform
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
