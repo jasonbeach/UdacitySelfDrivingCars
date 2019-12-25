@@ -13,4 +13,11 @@ FetchContent_Declare(
   GIT_TAG v1.8.0
 )
 
-FetchContent_MakeAvailable(fmt_fc cli11_fc)
+option(YAML_CPP_BUILD_TESTS "BUILD YAML Tests" OFF)
+FetchContent_Declare(
+  yaml_cpp_fc
+  GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
+  GIT_TAG  9a36242 # rrelease 0.6.3
+)
+
+FetchContent_MakeAvailable(fmt_fc cli11_fc yaml_cpp_fc)
