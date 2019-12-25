@@ -11,6 +11,8 @@ target_include_directories(cv_common
 
 target_link_libraries(cv_common 
   PUBLIC
-  ${OpenCV_LIBS})
+    ${OpenCV_LIBS}
+  PRIVATE
+    fmt::fmt)
 
 add_library(jbeach::cv_common ALIAS cv_common)

@@ -28,7 +28,7 @@ struct FindLaneParams{
   bool loop_video = false; // whether or not to loop the video continuously
   int frame_delay_ms = 40; // added delay between each frame
   bool show_trackbars = false; //whether or not to show window with adjustment trackbars
-
+  bool show_hough = false;
   // print the parameters as a string
   std::string str(){
     return fmt::format(

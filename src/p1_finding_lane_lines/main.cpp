@@ -16,7 +16,7 @@ int main(int argc, char** argv ){
   app.add_flag("-l, --loop", params.loop_video, "continuously loop video");
   app.add_flag("-t, --trackbar", params.show_trackbars, "show parameter trackbars");
   app.add_flag("-c, --canny", params.show_canny, "show canny / hough transform output instead of final annotated imaged"); 
-
+  app.add_flag("-o, --hough", params.show_hough, "show hough lines");
   CLI11_PARSE(app, argc, argv);
 
   process_video(file_path, &params);

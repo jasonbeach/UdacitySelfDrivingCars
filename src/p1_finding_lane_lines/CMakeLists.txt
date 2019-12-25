@@ -6,7 +6,7 @@ add_executable(p1_finding_lane_lines
   finding_lane_lines.cpp)
 
 target_link_libraries(p1_finding_lane_lines
-  ${OpenCV_LIBS} 
+  jbeach::cv_common 
   fmt::fmt
   CLI11::CLI11)
 

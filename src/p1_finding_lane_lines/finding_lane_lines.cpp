@@ -3,6 +3,7 @@
 #include <random>
 #include "fmt/format.h"
 #include <cassert>
+#include "cv_common.hpp"
 
 void FindLanes(const cv::Mat& input, cv::Mat& output, const FindLaneParams& p){
   auto y_size = input.size[0];
@@ -51,12 +52,14 @@ void FindLanes(const cv::Mat& input, cv::Mat& output, const FindLaneParams& p){
   cv::HoughLinesP(masked_canny, hough_lines, p.hough_rho, p.hough_theta, p.hough_threshold, 
     p.hough_min_line_length, p.hough_max_line_gap);
   
+  cv::Mat hough_lines_mat = cv::Mat::zeros(masked_canny_color.size(), masked_canny_color.type()); 
   // check the angle each line makes with the y-axis as a first cut at picking 
   // only valid lines 
   cv_line_list good_angle_lines;
   for (const auto& line : hough_lines){
     cv::Point2i p1 {line[0], line[1]}; //x1, y1
     cv::Point2i p2 {line[2], line[3]}; //x2, y2
+
 
     // convert points into a vector. Because we don't know order of the points 
     // coming from the hough transform we force the components of the vector to 
@@ -72,11 +75,25 @@ void FindLanes(const cv::Mat& input, cv::Mat& output, const FindLaneParams& p){
     if( theta > (p.line_min_angle) && theta < (p.line_max_angle) ){
       good_angle_lines.emplace_back(line);
 
+      if (p.show_hough){
+        static int ctr = 0;
+        cv::Scalar color{0,255,0};
+        if (ctr % 2 == 1)
+        {
+          color = cv::Scalar{0,0,255};
+        }
+        ctr++;
+        cv::line(hough_lines_mat, p1, p2,color, 2, 8);}
+
       // this should never happen --if this happens that means theta == 0 which 
       // should've been filtered out from the above checkes. 
       if(p1.y == p2.y ) {
         fmt::format("Error: bad line detected: p1: {}, {} p2: {}, {} theta: {}\n",
           p1.x, p1.y, p2.x, p2.y, theta * kR2D); }}}
+
+  if(p.show_hough){
+    cv::imshow("hough",hough_lines_mat);
+  }
 
   // if we have at least one "good" line lets do ransac
   if(good_angle_lines.size() > 0){
@@ -254,11 +271,6 @@ void plot_model(int y_size, const cv::Mat1d& model, const cv::Scalar color,
   for (auto pt : *points){
     cv::drawMarker(*image, pt, color,cv::MARKER_STAR, 10, 4);} }
 
-
-bool in_bounds(int val, int min, int max){
-  return val > min && val < max;}
-
-
 void adjust_canny_low( int count, void* param){
   FindLaneParams* params = static_cast<FindLaneParams*>(param);  
   if(in_bounds(count, 25, 200)){
@@ -315,6 +327,9 @@ void adjust_frame_speed (int ms_delay, void* param){
 void setup_windows(FindLaneParams* find_lane_params){
 
   cv::namedWindow("Adjustments",  cv::WINDOW_AUTOSIZE);
+  if (find_lane_params->show_hough){
+  cv::namedWindow("hough", cv::WINDOW_AUTOSIZE);}
+
   cv::createTrackbar("Canny Low","Adjustments", nullptr, 255, &adjust_canny_low, find_lane_params);
   cv::setTrackbarPos("Canny Low","Adjustments",find_lane_params->canny_low);
 

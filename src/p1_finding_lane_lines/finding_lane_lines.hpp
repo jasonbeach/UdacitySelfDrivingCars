@@ -18,9 +18,6 @@ T alpha_filter(const T& current_value, const T& new_value, float alpha){
 void plot_model(int y_size, const cv::Mat1d& model, const cv::Scalar color, 
   cv::Mat* image, std::vector<cv::Point> * points );
 
-// helper function to see if a value is within defined limits
-bool in_bounds(int val, int min, int max);
-
 // these next several functions are used by the trackbars to adjust that
 // trackbars respective value
 void adjust_canny_low( int count, void* param);
