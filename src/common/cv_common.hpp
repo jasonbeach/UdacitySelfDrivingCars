@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <opencv2/opencv.hpp>
+#include "fmt/core.h"
 
 std::string type2str(int type);
 
@@ -8,6 +9,36 @@ std::string type2str(int type);
 template<class T>
 bool in_bounds(T val, T min, T max){
   return val >= min && val <= max;}
+
+// This is a very badly implemented helper function that to allows a cv::Mat 
+// object to work with libfmt. In it's current form it *only* works properly 
+// a  
+
+template <>
+struct fmt::formatter<cv::Mat> {
+  constexpr auto parse(format_parse_context& ctx) { 
+    return ctx.begin(); }
+
+  template <typename FormatContext>
+  auto format(const cv::Mat& m, FormatContext& ctx) {
+    if(m.type() != 6){
+      throw std::logic_error("Only matrices of type 64FC1 work in current fmt formatter");}
+
+    if(!m.isContinuous()){ 
+      throw std::logic_error("Only continuous matrices are supported" );}
+    
+    ctx.out() = format_to(ctx.out(), "img: ({}x{}) type: {}\n", m.cols, m.rows, type2str(m.type()));
+
+    for (int row = 0; row < m.rows; ++row){
+      for (int col = 0; col < m.cols; ++ col){
+        ctx.out() = format_to(ctx.out(), "{:.2f}, ", m.at<double>(row, col));
+      }
+      ctx.out() = format_to(ctx.out(), "\n");
+    }
+
+    return ctx.out();
+  }
+};
 
 
 template <class T>
