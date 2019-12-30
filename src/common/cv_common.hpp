@@ -22,7 +22,7 @@ struct fmt::formatter<cv::Mat> {
   template <typename FormatContext>
   auto format(const cv::Mat& m, FormatContext& ctx) {
 
-    ctx.out() = format_to(ctx.out(), "size: {}x{} type: {}", m.cols, m.rows, type2str(m.type()));
+    ctx.out() = format_to(ctx.out(), "size: {}x{} type: {}", m.rows, m.cols, type2str(m.type()));
 
     if(m.type() != 6 || !m.isContinuous()){
       return ctx.out(); }
