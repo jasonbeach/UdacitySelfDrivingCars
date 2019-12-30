@@ -21,24 +21,23 @@ struct fmt::formatter<cv::Mat> {
 
   template <typename FormatContext>
   auto format(const cv::Mat& m, FormatContext& ctx) {
-    if(m.type() != 6){
-      throw std::logic_error("Only matrices of type 64FC1 work in current fmt formatter");}
 
-    if(!m.isContinuous()){ 
-      throw std::logic_error("Only continuous matrices are supported" );}
+    ctx.out() = format_to(ctx.out(), "size: {}x{} type: {}", m.cols, m.rows, type2str(m.type()));
+
+    if(m.type() != 6 || !m.isContinuous()){
+      return ctx.out(); }
     
-    ctx.out() = format_to(ctx.out(), "img: ({}x{}) type: {}\n", m.cols, m.rows, type2str(m.type()));
-
+    ctx.out() = format_to(ctx.out(), "\n");
+    
     for (int row = 0; row < m.rows; ++row){
       for (int col = 0; col < m.cols; ++ col){
-        ctx.out() = format_to(ctx.out(), "{:.2f}, ", m.at<double>(row, col));
-      }
-      ctx.out() = format_to(ctx.out(), "\n");
-    }
+        if(col == 0){
+          ctx.out() = format_to(ctx.out(), "  {:.2f}", m.at<double>(row, col));}
+        else{
+          ctx.out() = format_to(ctx.out(), ", {:.2f}", m.at<double>(row, col));} }
+      ctx.out() = format_to(ctx.out(), "\n"); }
 
-    return ctx.out();
-  }
-};
+    return ctx.out();  } };
 
 
 template <class T>
