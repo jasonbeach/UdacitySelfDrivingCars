@@ -23,7 +23,7 @@ struct Params{
   uint8_t max_l = 255;
   uint8_t nwindows = 12; //> number of sliding windows
   uint16_t margin = 250; //> Set the width of the windows +/- margin
-  uint16_t minpix = 50; //> Set minimum number of pixels found to recenter window
+  uint16_t minpix = 100; //> Set minimum number of pixels found to recenter window
   
   };
 

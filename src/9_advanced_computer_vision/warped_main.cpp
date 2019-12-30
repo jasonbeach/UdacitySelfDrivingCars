@@ -71,6 +71,7 @@ cv::Mat find_lane_line(const cv::Mat& warped_image, const cv::Rect& roi, const P
   
   cv::Mat empty = cv::Mat::zeros(warped_image.size(), CV_8U);
   cv::Mat nonzero_channel = cv::Mat::zeros(warped_image.size(), CV_8U);
+  std::vector<cv::Point> nonzero_points;
 
   while(current_y >= 0 ){
     if (current_x < 0){
@@ -88,8 +89,10 @@ cv::Mat find_lane_line(const cv::Mat& warped_image, const cv::Rect& roi, const P
   
     for(int i = 0; i < nonzero.rows; ++i){
       cv::Point pt = nonzero.at<cv::Point>(i);
-      nonzero_channel.at<uint8_t>(pt.y + current_y, pt.x + current_x) = 255;
-    }
+      pt.x += current_x;
+      pt.y += current_y;
+      nonzero_channel.at<uint8_t>(pt.y, pt.x) = 255;
+      nonzero_points.push_back(pt);}
 
     if (nonzero.rows > p.minpix){
       cv::Mat x_pts;
@@ -101,9 +104,46 @@ cv::Mat find_lane_line(const cv::Mat& warped_image, const cv::Rect& roi, const P
 
       current_x +=  mean.at<float>(0,0) - p.margin/2;}
 
-
     current_y -= window_height; 
     cv::rectangle(empty, window_roi, {255});} //draw  current row
+
+
+  auto length = nonzero_points.size();
+  cv::Mat A = cv::Mat::ones(length, 3, CV_32F);
+  cv::Mat b(length, 1, CV_32F);
+
+  //use 'y' as the independent variable
+  for(size_t i = 0; i < nonzero_points.size(); ++i){
+    A.at<float>(i, 0) = nonzero_points[i].y * nonzero_points[i].y;
+    A.at<float>(i, 1) = nonzero_points[i].y;
+    b.at<float>(i, 0) = nonzero_points[i].x;
+  }
+
+  fmt::print("A: {}, b: {}\n", A, b);
+
+  cv::Mat x_sys;
+  cv::solve(A, b, x_sys, cv::DECOMP_LU | cv::DECOMP_NORMAL);
+
+  
+
+  float c2 = x_sys.at<float>(0,0);
+  float c1 = x_sys.at<float>(1,0);
+  float c0 = x_sys.at<float>(2,0);
+
+  fmt::print("solved: {} *y^2 + {}*y + {}", c2, c1, c0);
+
+  std::vector<cv::Point> poly;
+  for (int y = 0; y < nonzero_channel.rows; y+=20){
+    float x = c2*y*y + c1*y + c0;
+    if(x >=0 && x <= nonzero_channel.cols){
+      poly.emplace_back(x , y  );}
+  }
+
+  fmt::print("fit points in image: {}\n", poly.size());
+  std::vector<std::vector<cv::Point>> polys;
+  polys.push_back(poly);
+
+  cv::polylines(nonzero_channel, polys, false, {255},3);
 
   cv::Mat arry[3] = {warped_image, nonzero_channel, empty};
 
