@@ -48,26 +48,8 @@ cv::Mat nonzero_test(const cv::Mat& img){
 
 }
 
-int32_t find_center_of_mass(cv::Mat img){
+cv::Mat find_lane_line(const cv::Mat& warped_image, const cv::Rect& roi, const Params& p){
 
-  cv::Mat total;
-  cv::reduce(img, img, 0, CV_REDUCE_SUM, CV_32F);
-  img.convertTo(img, CV_32F);
-
-  cv::reduce(img, total, 1, CV_REDUCE_SUM, CV_32F);
-
-  for(int i = 0; i < img.cols; ++i){
-    img.at<float>(0,i) *= i; }
-
-
-  cv::Mat x_mass;
-  cv::reduce(img, x_mass, 1, CV_REDUCE_SUM, CV_32F);
-
-  return x_mass.at<float>(0,0) / total.at<float>(0,0);
-}
-
-cv::Mat find_lane_line(const cv::Mat& warped_image, const cv::Rect& roi, const Params& p)
-{
   cv::Mat mask = cv::Mat::zeros(warped_image.size(), CV_8U); // all 0
 
   mask(roi) = 255;
@@ -109,22 +91,19 @@ cv::Mat find_lane_line(const cv::Mat& warped_image, const cv::Rect& roi, const P
       nonzero_channel.at<uint8_t>(pt.y + current_y, pt.x + current_x) = 255;
     }
 
-    cv::rectangle(empty, window_roi, {255}); //draw  current roi
-
-    if (nonzero.rows > p.minpix)
-    {
+    if (nonzero.rows > p.minpix){
       cv::Mat x_pts;
-      cv::extractChannel(image_window, x_pts, 0);
+      cv::extractChannel(nonzero, x_pts, 0);
 
-      int32_t center_of_mass = find_center_of_mass(x_pts);
+      cv::Mat mean;
+      x_pts.convertTo(mean, CV_32F);
+      cv::reduce(mean, mean, 0, CV_REDUCE_AVG, CV_32F);
 
-      current_x +=  center_of_mass - p.margin/2;
-      cv::rectangle(empty, {current_x + p.margin/2, current_y},{current_x + p.margin/2, current_y + window_height}, {255}, 3);
+      current_x +=  mean.at<float>(0,0) - p.margin/2;}
 
-    }
 
-    current_y -= window_height;
-  }
+    current_y -= window_height; 
+    cv::rectangle(empty, window_roi, {255});} //draw  current row
 
   cv::Mat arry[3] = {warped_image, nonzero_channel, empty};
 
