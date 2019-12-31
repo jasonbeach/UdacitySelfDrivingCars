@@ -47,6 +47,10 @@ T AbsMax (cv::Mat img){
   cv::minMaxIdx(img, &min_val, &max_val);
   return std::max(abs(min_val), abs(max_val));}
 
+template<class T>
+T SQ(T val){
+  return val*val;}
+
 std::vector<std::string> get_files(const std::string& directory);
 
 void ThresholdImage(cv::Mat input, cv::Mat& output, double min_val, double max_val);

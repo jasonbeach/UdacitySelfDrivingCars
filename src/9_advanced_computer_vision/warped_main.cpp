@@ -6,7 +6,7 @@
 #include "threshold_functions.hpp"
 #include "fmt/core.h"
 #include "CLI/CLI.hpp"
-#include "yaml_helpers.hpp"
+#include "config.hpp"
 
 int get_max_row(const cv::Mat& img){
   cv::Mat summed;
@@ -17,38 +17,48 @@ int get_max_row(const cv::Mat& img){
   cv::minMaxLoc(summed, nullptr, nullptr, nullptr, &max_loc);
   return max_loc.x;}
 
-cv::Mat nonzero_test(const cv::Mat& img){
-  cv::threshold(img, img, 0, 255, CV_THRESH_BINARY);
-  fmt::print("img size: {}x{} type: {}\n", img.cols, img.rows, type2str(img.type()));
-  cv::Mat empty = cv::Mat::zeros(img.size(), CV_8U);
-  cv::Mat nonzero_channel = cv::Mat::zeros(img.size(), CV_8U);
-  fmt::print("empty Mat:  rows: {} cols: {} type: {}\n", empty.rows, empty.cols, type2str(empty.type()));
-  fmt::print("nonzero channel Mat:  rows: {} cols: {} type: {}\n", nonzero_channel.rows, nonzero_channel.cols, type2str(nonzero_channel.type()));
 
-  //cv::Mat nonzero;
-  std::vector<cv::Point> locations;
-  cv::findNonZero(img, locations);
-  //fmt::print("nonzero Mat:  rows: {} cols: {} type: {}\n", nonzero.rows, nonzero.cols, type2str(nonzero.type()));
-  fmt::print("locations: size: {}\n ", locations.size());  
-  
-  for(const auto& pt : locations){
-    nonzero_channel.at<uint8_t>(pt.y, pt.x) = 255;
-  }
+// from https://knowledge.udacity.com/questions/29265
+  // we just solved 
+  //         x = a*y^2 + b*y + c    eq(1) 
+  // where a, b, c, x and y are in pixel space
+  // we want 
+  //         X = A*Y^2 + B*Y + C   eq(2) 
+  // where A, B, C, X and Y are in real space meter)
+  // let X = x*mx and Y = y*my
+  // plugging these into eq 2: 
+  //         x*mx = A*y^2*my^2 + B*y*my + C  eq(3)
+  // or 
+  //             A*y^2*my^2 + B*y*my + C   
+  //         x = ----------   ------   -     eq(4)
+  //                 mx         mx     mx
+  //
+  // by comparing similar terms between eq(1) and eq(4) we can infer that
+  //             a * mx        b*mx       
+  //         A = ------   B = -------  C = c*mx   eq(5)
+  //              my^2          my
+  //
+  // radius of curvature in pixel space is:
+  //
+  //             (1+(2*a*y+b)^2)^1.5
+  //        rc = -------------------        eq(6)
+  //                    |2*a|
+  //
+  // or in real world coordinates
+  //
+  //             (1+(2*A*Y+B)^2)^1.5
+  //        Rc = -------------------        eq(6)
+  //                    |2*A|
+  //
 
-  // for(int i = 0; i < nonzero.rows; ++i){
-  //   cv::Point pt = nonzero.at<cv::Point>(i);
-  //   nonzero_channel.at<uint8_t>(pt.y, pt.x) = 255;
-  // }
+float compute_curvature_radius(float a, float b, float mx, float my, float y){
+  float Y = y * my;
+  float A = a * mx / SQ(my);
+  float B = b * mx / my;
+  float Rc = std::pow(SQ(2.0*A*Y + B)+1, 1.5) / std::abs(2.0*A);
+  return Rc;}
 
-  cv::Mat arry[3] = {img, nonzero_channel, empty};
-
-  cv::Mat merged;
-  cv::merge(arry, 3, merged);
-  return merged;
-
-}
-
-cv::Mat find_lane_line(const cv::Mat& warped_image, const cv::Rect& roi, const Params& p){
+cv::Mat find_lane_line(const cv::Mat& warped_image, const cv::Rect& roi, const Params& p, char lane){
 
   cv::Mat mask = cv::Mat::zeros(warped_image.size(), CV_8U); // all 0
 
@@ -58,9 +68,6 @@ cv::Mat find_lane_line(const cv::Mat& warped_image, const cv::Rect& roi, const P
   warped_image.copyTo(masked_warped, mask);
 
   int lane_line_center = get_max_row(masked_warped);
-
-  //fmt::print("min: {} loc: {} max: {} loc: {}\n", min_val, min_loc.x, max_val, max_loc.x);
-  //cv::line(warped_left, {max_loc.x, warped_left.rows/2},{max_loc.x, warped_left.rows}, {255},2 );
 
   int rows = warped_image.rows;
 
@@ -126,24 +133,30 @@ cv::Mat find_lane_line(const cv::Mat& warped_image, const cv::Rect& roi, const P
 
   
 
-  float c2 = x_sys.at<float>(0,0);
-  float c1 = x_sys.at<float>(1,0);
-  float c0 = x_sys.at<float>(2,0);
+  float a_pix = x_sys.at<float>(0,0);
+  float b_pix = x_sys.at<float>(1,0);
+  float c_pix = x_sys.at<float>(2,0);
+  float y_pix = 720;
 
-  fmt::print("solved: {} *y^2 + {}*y + {}", c2, c1, c0);
+  float Rc = compute_curvature_radius(a_pix, b_pix, p.xm_per_pix, p.ym_per_pix, y_pix);
+
+  int loc = 30;
+  if (lane == 'r'){
+    loc = 60;}
+  
+  cv::putText(nonzero_channel,fmt::format("Radius:{:.2f}m", Rc),{10, loc},cv::FONT_HERSHEY_SIMPLEX,1, {255},3);
 
   std::vector<cv::Point> poly;
   for (int y = 0; y < nonzero_channel.rows; y+=20){
-    float x = c2*y*y + c1*y + c0;
+    float x = a_pix*SQ(y) + b_pix*y + c_pix;
     if(x >=0 && x <= nonzero_channel.cols){
       poly.emplace_back(x , y  );}
   }
 
-  fmt::print("fit points in image: {}\n", poly.size());
-  std::vector<std::vector<cv::Point>> polys;
-  polys.push_back(poly);
+  //std::vector<std::vector<cv::Point>> polys;
+  //polys.push_back(poly);
 
-  cv::polylines(nonzero_channel, polys, false, {255},3);
+  cv::polylines(nonzero_channel, poly, false, {255},3);
 
   cv::Mat arry[3] = {warped_image, nonzero_channel, empty};
 
@@ -156,14 +169,8 @@ cv::Mat find_lane_line(const cv::Mat& warped_image, const cv::Rect& roi, const P
 void display_image(const Params& p){
 
   auto t1 = std::chrono::high_resolution_clock::now();
-  cv::Mat abs_img = abs_sobel_thresh(p.image, p.orientation, p.min_thresh, p.max_thresh);
-  //cv::Mat mag_img = mag_threshold(p.image, p.mag_sobel_kernel, p.min_mag, p.max_mag);
-  //cv::Mat dir_img = dir_threshold(mag_img, p.dir_sobel_kernel, p.min_angle, p.max_angle);
-  //cv::Mat sobel_chan;
-
-  //cv::bitwise_and(abs_img, mag_img, sobel_chan);
-  //cv::bitwise_and(sobel_chan, dir_img, sobel_chan);
-
+  cv::Mat abs_img = abs_sobel_thresh(p.image, p.min_sobel, p.max_sobel);
+  
   cv::Mat s_chan = thresh_color(p.image, 2, p.min_s, p.max_s);
   cv::Mat l_chan = thresh_color(p.image, 1, p.min_l, p.max_l);
  
@@ -184,8 +191,8 @@ void display_image(const Params& p){
   cv::threshold(warped_img, warped_img, 128, 255, CV_THRESH_BINARY);
 
   //cv::Mat combined = nonzero_test(warped_img);
-  cv::Mat left_line = find_lane_line(warped_img, cv::Rect(0,warped_img.rows/2,warped_img.cols/2, warped_img.rows/2), p);
-  cv::Mat right_line = find_lane_line(warped_img, cv::Rect(warped_img.cols/2, warped_img.rows/2, warped_img.cols/2, warped_img.rows/2), p);
+  cv::Mat left_line = find_lane_line(warped_img, cv::Rect(0,warped_img.rows/2,warped_img.cols/2, warped_img.rows/2), p, 'l');
+  cv::Mat right_line = find_lane_line(warped_img, cv::Rect(warped_img.cols/2, warped_img.rows/2, warped_img.cols/2, warped_img.rows/2), p, 'r');
 
  
   auto t2 = std::chrono::high_resolution_clock::now();
@@ -202,33 +209,17 @@ void display_image(const Params& p){
 
 int main(int argc, char** argv ){
 
-  Params p; 
   CLI::App app{"color thresholds"};
   
   std::string config_yaml = "config.yaml";
   app.add_option("-f, --file", config_yaml, "path to yaml file");
   
   CLI11_PARSE(app, argc, argv);
-  
-  YAML::Node config = YAML::LoadFile(config_yaml);
 
-  std::string image_file_path;
-  if(config["image_file_path"]){
-    image_file_path = config["image_file_path"].as<std::string>(); 
-    p.image_files = get_files(image_file_path);}
-
-
-  if(config["K"]){
-    p.K = config["K"].as<cv::Mat>(); }
-
-  if(config["D"]){
-    p.D = config["D"].as<cv::Mat>();}
-
-  if(config["M"]){
-    p.M = config["M"].as<cv::Mat>();}
+  Params p = load_params(config_yaml);
 
   if(p.image_files.empty()){
-    fmt::print("No files given in: {}\n", image_file_path);
+    fmt::print("No files given in: {}\n", p.image_file_path);
     return -1;}
 
   cv::Mat image = cv::imread( p.image_files.at(0), cv::IMREAD_COLOR );
@@ -238,30 +229,17 @@ int main(int argc, char** argv ){
     exit(-1);}
 
   fmt::print("image size: {}x{} type: {}\n", image.cols, image.rows, type2str(image.type()));
-  
-  
+    
   cv::undistort(image, p.image, p.K, p.D);
   
   cv::namedWindow("image", CV_WINDOW_AUTOSIZE);
   cv::namedWindow("adjustments", CV_WINDOW_AUTOSIZE);
 
   cv::createTrackbar("sobel min","adjustments", nullptr, 255, &adjust_sobel_min, &p);
-  cv::setTrackbarPos("sobel min","adjustments", p.min_thresh);
+  cv::setTrackbarPos("sobel min","adjustments", p.min_sobel);
  
   cv::createTrackbar("sobel max","adjustments", nullptr, 255, &adjust_sobel_max, &p);
-  cv::setTrackbarPos("sobel max","adjustments",p.max_thresh);
-
-  cv::createTrackbar("min mag","adjustments", nullptr, 255, &adjust_min_mag, &p);
-  cv::setTrackbarPos("min mag","adjustments", p.min_mag);
- 
-  cv::createTrackbar("max mag","adjustments", nullptr, 255, &adjust_max_mag, &p);
-  cv::setTrackbarPos("max mag","adjustments",p.max_mag);
-
-  cv::createTrackbar("min angle","adjustments", nullptr, 157, &adjust_min_angle, &p);
-  cv::setTrackbarPos("min angle","adjustments", p.min_angle * 100.0);
- 
-  cv::createTrackbar("max angle","adjustments", nullptr, 157, &adjust_max_angle, &p);
-  cv::setTrackbarPos("max angle","adjustments",p.max_angle * 100);
+  cv::setTrackbarPos("sobel max","adjustments",p.max_sobel);
 
   cv::createTrackbar("min s","adjustments", nullptr, 255, &adjust_s_min, &p);
   cv::setTrackbarPos("min s","adjustments", p.min_s);

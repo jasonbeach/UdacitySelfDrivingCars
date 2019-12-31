@@ -1,6 +1,5 @@
-#image_file: "test_images/project2/test_images/signs_vehicles_xygrad.png"
-#image_file: "test_images/project2/test_images/straight_lines1.jpg"
 image_file_path: "test_images/project2/test_images"
+perspective_output_file: "perspective_out.yaml"
 K:
   rows: 3
   cols: 3
@@ -39,3 +38,23 @@ M:
     - 1.6777890113423869e-06
     - -0.0023773975151064049
     - 1
+    # - -0.61540183164331486
+    # - -1.5279385168526394
+    # - 1034.4143759092342
+    # - 5.7395296713825565e-15
+    # - -1.7232500297813611
+    # - 750.01323013944989
+    # - 8.0577911196888995e-18
+    # - -0.0023861179197094914
+    # - 1
+min_sobel: 20
+max_sobel: 100
+min_s: 175
+max_s: 255
+min_l: 200
+max_l: 255
+nwindows: 12
+margin: 250
+minpix: 100
+xm_per_pix: 0.00501355    #3.7 m / 738 pix  
+ym_per_pix: 0.06818182    #3 m / 44 pix

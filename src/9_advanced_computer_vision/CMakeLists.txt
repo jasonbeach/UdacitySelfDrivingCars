@@ -1,7 +1,8 @@
 ##################### c9 warped perspective ######################
 add_executable(c9_warped
   warped_main.cpp
-  threshold_functions.cpp)
+  threshold_functions.cpp
+  config.cpp)
 
 target_link_libraries(c9_warped
   jbeach::cv_common
