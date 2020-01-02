@@ -1,7 +1,7 @@
 ##################### project 2 advanced lane finding ######################
 add_executable(p2_advanced_lane_finding
   p2_main.cpp
-  LaneFinder.cpp
+  AdvancedLaneFinder.cpp
   config.cpp)
 
 target_link_libraries(p2_advanced_lane_finding

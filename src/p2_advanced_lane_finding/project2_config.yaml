@@ -1,5 +1,9 @@
-image_file_path: "test_images/project2/test_images"
-perspective_output_file: "perspective_out.yaml"
+#video_filename: "test_videos/project2/challenge_video.mp4"
+#video_filename: "test_videos/project2/harder_challenge_video.mp4"
+video_filename: "test_videos/project2/project_video.mp4"
+frame_rate_Hz: 25
+trackbar_window: "Adjustments"
+image_window: "Processed Image"
 K:
   rows: 3
   cols: 3
@@ -38,14 +42,14 @@ M:
     - 1.6777890113423869e-06
     - -0.0023773975151064049
     - 1
+xm_per_pix: 0.00501355    #3.7 m / 738 pix  
+ym_per_pix: 0.06818182    #3 m / 44 pix
+margin: 250
+minpix: 100    
+nwindows: 12
 min_sobel: 20
 max_sobel: 100
 min_s: 175
 max_s: 255
 min_l: 200
 max_l: 255
-nwindows: 12
-margin: 250
-minpix: 100
-xm_per_pix: 0.00501355    #3.7 m / 738 pix  
-ym_per_pix: 0.06818182    #3 m / 44 pix

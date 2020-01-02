@@ -1,13 +1,19 @@
-#include "config.hpp"
-#include "LaneFinder.hpp"
+#include "AdvancedLaneFinder.hpp"
+
+int load_params(int argc, char* argv[], AdvancedLaneFinderParams*, ImagePipelineParams*);
 
 int main(int argc, char* argv[]){
   
-  Params p = load_params(argc, argv);
+  AdvancedLaneFinderParams ap;
+  ImagePipelineParams ip;
 
-  LaneFinder lf{p};
+  int result = load_params(argc, argv, &ap, &ip);
+  if( result != 0){
+    return result; }
+
+  AdvancedLaneFinder finder{ap, ip};
   
-  lf.Run();
+  finder.Run();
 
   return 0;
 }
