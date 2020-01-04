@@ -2,7 +2,7 @@
 #include "cv_common.hpp"
 
 struct AdvancedLaneFinderParams{
-  std::string image_window;
+  std::string trackbar_window;
   cv::Mat K;
   cv::Mat D;
   cv::Mat M;
@@ -18,5 +18,14 @@ struct AdvancedLaneFinderParams{
   uint8_t min_l;
   uint8_t max_l;
   bool show_trackbars;
+  int show_warped = false;
   bool initialized = false;  };
+
+struct LaneLineModel{
+  float a = 0;
+  float b = 0;
+  float c = 0;
+  bool valid = false;
   
+  float calc_x(float y) const{
+    return a*SQ(y) + b*y + c; } };

@@ -44,12 +44,12 @@ M:
     - 1
 xm_per_pix: 0.00501355    #3.7 m / 738 pix  
 ym_per_pix: 0.06818182    #3 m / 44 pix
-margin: 250
+margin: 100
 minpix: 100    
 nwindows: 12
 min_sobel: 20
 max_sobel: 100
-min_s: 175
+min_s: 100
 max_s: 255
-min_l: 200
+min_l: 210
 max_l: 255

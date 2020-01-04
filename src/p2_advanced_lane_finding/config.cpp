@@ -33,8 +33,8 @@ int load_params(int argc, char* argv[], AdvancedLaneFinderParams* ap, ImagePipel
     ip->image_window = config["image_window"].as<std::string>(); }
 
   ap->show_trackbars = ip->show_trackbars;
-  ap->image_window = ip->show_trackbars;
-
+  ap->trackbar_window = ip->trackbar_window;
+  
   if(config["K"]){
     ap->K = config["K"].as<cv::Mat>(); }
 
