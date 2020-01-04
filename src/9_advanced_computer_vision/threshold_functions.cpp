@@ -18,8 +18,9 @@ void adjust_sobel_max( int count, void* param){
 cv::Mat abs_sobel_thresh(cv::Mat img, uint8_t thresh_min, uint8_t thresh_max){
 
   cv::Mat img_gray;
-  cv::cvtColor(img, img_gray, cv::COLOR_RGB2GRAY);
+  cv::cvtColor(img, img_gray, cv::COLOR_BGR2GRAY);
 
+  cv::imshow("gray", img_gray);
   cv::Mat sobel_out;
   cv::Sobel(img_gray, sobel_out, CV_64F, 1, 0);
   
