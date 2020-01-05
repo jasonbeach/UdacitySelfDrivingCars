@@ -42,7 +42,8 @@ int load_params(int argc, char* argv[], AdvancedLaneFinderParams* ap, ImagePipel
     ap->D = config["D"].as<cv::Mat>();}
 
   if(config["M"]){
-    ap->M = config["M"].as<cv::Mat>();}
+    ap->M = config["M"].as<cv::Mat>();
+    ap->M_inv = ap->M.inv();}
 
   if(config["xm_per_pix"]){
     ap->xm_per_pix = config["xm_per_pix"].as<float>(); }

@@ -6,6 +6,7 @@ struct AdvancedLaneFinderParams{
   cv::Mat K;
   cv::Mat D;
   cv::Mat M;
+  cv::Mat M_inv;
   float xm_per_pix;
   float ym_per_pix;
   uint16_t margin; //> Set the width of the windows +/- margin
@@ -21,11 +22,3 @@ struct AdvancedLaneFinderParams{
   int show_warped = false;
   bool initialized = false;  };
 
-struct LaneLineModel{
-  float a = 0;
-  float b = 0;
-  float c = 0;
-  bool valid = false;
-  
-  float calc_x(float y) const{
-    return a*SQ(y) + b*y + c; } };

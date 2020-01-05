@@ -19,8 +19,4 @@ class AdvancedLaneFinder{
     const AdvancedLaneFinderImpl* Impl() const { return impl_.get(); }
     AdvancedLaneFinderImpl* Impl() { return impl_.get(); }
 
-    std::unique_ptr<AdvancedLaneFinderImpl> impl_;
-
-
-
-};
+    std::unique_ptr<AdvancedLaneFinderImpl> impl_; };

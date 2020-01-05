@@ -38,6 +38,27 @@ static void adjust_l_max( int count, void* param){
   if(in_bounds<uint8_t>(count, p->min_l, 255)){
     p->max_l = count;}}
 
+
+using PointVector = std::vector<cv::Point>;
+using PointVectorList = std::vector<PointVector>;
+
+struct LaneLineModel{
+  float a = 0;
+  float b = 0;
+  float c = 0;
+  bool valid = false;
+  
+  float CalcX(float y) const{
+    return a*SQ(y) + b*y + c; } 
+
+  PointVector CurvePoints(int y_min, int y_max, int x_min, int x_max, int step = 20) const{
+    PointVector curve;
+    for (int y = y_min; y < y_max; y+=step){
+      float x = CalcX(y);
+      if(x >= x_min && x <= x_max){
+        curve.emplace_back(x , y ); }}
+    return curve; } };
+
 class AdvancedLaneFinder::AdvancedLaneFinderImpl{
   public:
     AdvancedLaneFinderImpl(const AdvancedLaneFinderParams& ap, const ImagePipelineParams& ip):
@@ -56,66 +77,91 @@ class AdvancedLaneFinder::AdvancedLaneFinderImpl{
       cv::Mat undistorted;
       cv::undistort(frame, undistorted, ap_.K, ap_.D);
       
-      cv::Mat undistorted_gray;
-      cv::cvtColor(undistorted, undistorted_gray, cv::COLOR_BGR2GRAY);
-
-      cv::Mat sobel_gray;
-      abs_sobelx_threshold(undistorted_gray, sobel_gray, ap_.min_sobel, ap_.max_sobel);
-
-      cv::Mat img_hls;
-      cv::cvtColor(undistorted, img_hls, cv::COLOR_BGR2HLS);
-
-      cv::Mat l_chan_filt, s_chan, l_chan;
-      threshold_channel(img_hls, l_chan, 1, ap_.min_l, ap_.max_l);
-      threshold_channel(img_hls, s_chan, 2, ap_.min_s, ap_.max_s);
-      threshold_channel(img_hls, l_chan_filt, 1, 100, 255);
-
       cv::Mat binary_img;
-      cv::bitwise_or(s_chan, l_chan, binary_img);
-      cv::bitwise_and(binary_img, l_chan_filt, binary_img);
-      cv::bitwise_or(sobel_gray, binary_img, binary_img);
+      threshold_image(undistorted, binary_img);
 
       cv::Mat warped_img;
       cv::warpPerspective(binary_img, warped_img, ap_.M, binary_img.size());
       cv::threshold(warped_img, warped_img, 128, 255, CV_THRESH_BINARY);
 
       int left_lane_starting_point = get_max_col(warped_img, cv::Rect(0,warped_img.rows/2,warped_img.cols/2, warped_img.rows/2));
-      std::vector<cv::Point> left_lane_points = get_lane_line_points(warped_img, left_lane_starting_point);
+      PointVector left_lane_points = get_lane_line_points(warped_img, left_lane_starting_point);
       LaneLineModel left_model_pix = FitPoints(left_lane_points);
       float left_lane_curvature = compute_curvature_radius(left_model_pix, ap_.xm_per_pix, ap_.ym_per_pix, 720);
 
       int right_lane_starting_point = get_max_col(warped_img, cv::Rect(warped_img.cols/2, warped_img.rows/2, warped_img.cols/2, warped_img.rows/2));
-      std::vector<cv::Point> right_lane_points = get_lane_line_points(warped_img, right_lane_starting_point);
+      PointVector right_lane_points = get_lane_line_points(warped_img, right_lane_starting_point);
       LaneLineModel right_model_pix = FitPoints(right_lane_points);
       float right_lane_curvature = compute_curvature_radius(right_model_pix, ap_.xm_per_pix, ap_.ym_per_pix, 720);
 
       float ave_curvature = (left_lane_curvature + right_lane_curvature) / 2.0;
 
-      float lane_center = (left_model_pix.calc_x(warped_img.rows) + right_model_pix.calc_x(warped_img.rows)) / 2.0;
+      float lane_center = (left_model_pix.CalcX(warped_img.rows) + right_model_pix.CalcX(warped_img.rows)) / 2.0;
       float center_offset = (lane_center - (warped_img.cols /2.0)) * ap_.xm_per_pix;
 
+
+
+      cv::Mat warped_annotations = cv::Mat::zeros(warped_img.size(), CV_8U);
+      PointVector left_curve_points = left_model_pix.CurvePoints(0, warped_img.rows, 0, warped_img.cols);
+      PointVector right_curve_points = right_model_pix.CurvePoints(0, warped_img.rows, 0, warped_img.cols);
+      PointVectorList curve_points;
+
+      // fillPoly can handle multiple polys and so wants a vector of polys or a 
+      // vector of vector of points
+      curve_points.push_back(left_curve_points);
+      curve_points.at(0).insert(curve_points.at(0).end(), right_curve_points.rbegin(), right_curve_points.rend());
+
+      
+      if(curve_points.at(0).size() > 4){
+        cv::fillPoly(warped_annotations, curve_points, cv::Scalar(255));}
+
       cv::Mat annotations = cv::Mat::zeros(undistorted.size(), CV_8U);
-      cv::putText(annotations, fmt::format("Radius:{:.2f}m", ave_curvature), {10, 30}, cv::FONT_HERSHEY_SIMPLEX, 1, {255}, 3);
-      cv::putText(annotations, fmt::format("Lane Center Offset: {:.2f}m", center_offset), {10, 60}, cv::FONT_HERSHEY_SIMPLEX, 1, {255}, 3 );
+      cv::warpPerspective(warped_annotations, annotations, ap_.M_inv, annotations.size());
+      
+      //cv::imshow("unwarped poly", annotations);
 
       out_frame = undistorted.clone();
-      out_frame.setTo(cv::Scalar(255,0,0), binary_img);
-      out_frame.setTo(cv::Scalar(0,255,0), annotations);
+
+      cv::putText(out_frame, fmt::format("Radius:{:.2f}m", ave_curvature), {10, 30}, cv::FONT_HERSHEY_SIMPLEX, 1, {0,255,0}, 3);
+      cv::putText(out_frame, fmt::format("Lane Center Offset: {:.2f}m", center_offset), {10, 60}, cv::FONT_HERSHEY_SIMPLEX, 1, {0,255,0}, 3 );
+
+      //out_frame.setTo(cv::Scalar(255,0,0), binary_img);
+      out_frame.setTo(cv::Scalar(0,64,0), annotations);
 
       if(ap_.show_warped){
         //paint nonzero points
         cv::Mat nonzero_channel = cv::Mat::zeros(warped_img.size(), CV_8U); 
         FillPoints(nonzero_channel, left_lane_points);
         FillPoints(nonzero_channel, right_lane_points);
+
         //paint fit curves
-        DrawCurve(annotations, left_model_pix);
-        DrawCurve(annotations, right_model_pix);
+        //DrawCurve(annotations, left_model_pix);
+        //DrawCurve(annotations, right_model_pix);
         // combine channels
         cv::Mat warped_final;
-        cv::Mat arry[3] = {warped_img, annotations, nonzero_channel};
+        cv::Mat arry[3] = {warped_img, warped_annotations, nonzero_channel};
         cv::merge(arry, 3, warped_final); 
         cv::imshow("warped", warped_final);} }
+    
+    void threshold_image(const cv::Mat& undistorted_img, cv::Mat& output_img){
+      cv::Mat undistorted_gray;
+      cv::cvtColor(undistorted_img, undistorted_gray, cv::COLOR_BGR2GRAY);
 
+      cv::Mat sobel_gray;
+      abs_sobelx_threshold(undistorted_gray, sobel_gray, ap_.min_sobel, ap_.max_sobel);
+
+      cv::Mat img_hls;
+      cv::cvtColor(undistorted_img, img_hls, cv::COLOR_BGR2HLS);
+
+      cv::Mat l_chan_filt, s_chan, l_chan;
+      threshold_channel(img_hls, l_chan, 1, ap_.min_l, ap_.max_l);
+      threshold_channel(img_hls, s_chan, 2, ap_.min_s, ap_.max_s);
+      threshold_channel(img_hls, l_chan_filt, 1, 100, 255);
+
+      cv::bitwise_or(s_chan, l_chan, output_img);
+      cv::bitwise_and(output_img, l_chan_filt, output_img);
+      cv::bitwise_or(sobel_gray, output_img, output_img); }
+    
     void abs_sobelx_threshold(const cv::Mat& input, cv::Mat& output, uint8_t min_sobel, uint8_t max_sobel){
 
       cv::Sobel(input, output, CV_64F, 1, 0);
@@ -150,7 +196,7 @@ class AdvancedLaneFinder::AdvancedLaneFinderImpl{
       cv::minMaxLoc(summed, nullptr, nullptr, nullptr, &max_col);
       return max_col.x;}
 
-    std::vector<cv::Point> get_lane_line_points(const cv::Mat& image, int start_col){
+    PointVector get_lane_line_points(const cv::Mat& image, int start_col){
 
       // calc window height
       int window_height = image.rows / ap_.nwindows;
@@ -161,7 +207,7 @@ class AdvancedLaneFinder::AdvancedLaneFinderImpl{
       
       //cv::Mat empty = cv::Mat::zeros(image.size(), CV_8U);
       //cv::Mat nonzero_channel = cv::Mat::zeros(image.size(), CV_8U);
-      std::vector<cv::Point> nonzero_points;
+      PointVector nonzero_points;
       bool finished = false;
       while(current_y >= 0 && !finished){
 
@@ -197,7 +243,7 @@ class AdvancedLaneFinder::AdvancedLaneFinderImpl{
 
       return nonzero_points;}
 
-    LaneLineModel FitPoints(const std::vector<cv::Point> points){
+    LaneLineModel FitPoints(const PointVector points){
       
       LaneLineModel model_pix;
 
@@ -268,18 +314,15 @@ class AdvancedLaneFinder::AdvancedLaneFinderImpl{
       float Rc = std::pow(SQ(2.0*A*Y + B)+1, 1.5) / std::abs(2.0*A);
       return Rc;}
     
-    void FillPoints(cv::Mat& image, const std::vector<cv::Point> points){
+    void FillPoints(cv::Mat& image, const PointVector points){
       for(const auto& point : points){
         image.at<uint8_t>(point.y, point.x) = 255; } }
 
-    void DrawCurve(cv::Mat& image, const LaneLineModel& m){
-      std::vector<cv::Point> poly;
-      for (int y = 0; y < image.rows; y+=20){
-        float x = m.calc_x(y);
-        if(x >=0 && x <= image.cols){
-          poly.emplace_back(x , y  );}}
 
-      cv::polylines(image, poly, false, {255}, 3);}
+    void DrawCurve(cv::Mat& image, const LaneLineModel& m){
+      PointVector curve = m.CurvePoints(0, image.rows, 0, image.cols);
+
+      cv::polylines(image, curve, false, {255}, 3);}
 
     void SetupWindows(){
     
@@ -309,8 +352,7 @@ class AdvancedLaneFinder::AdvancedLaneFinderImpl{
       cv::createTrackbar("show warped", ap_.trackbar_window, &ap_.show_warped, 1);}
 
     AdvancedLaneFinderParams ap_;
-    ImagePipeline pipeline_;
-};
+    ImagePipeline pipeline_;};
 
 AdvancedLaneFinder::AdvancedLaneFinder(const AdvancedLaneFinderParams& ap, const ImagePipelineParams& ip): 
   impl_{std::make_unique<AdvancedLaneFinderImpl>(ap, ip)} {}
