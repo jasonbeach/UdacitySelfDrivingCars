@@ -54,3 +54,7 @@ T SQ(T val){
 std::vector<std::string> get_files(const std::string& directory);
 
 void ThresholdImage(cv::Mat input, cv::Mat& output, double min_val, double max_val);
+
+template< class T>
+T alpha_filter(const T& current_value, const T& new_value, float alpha){
+  return alpha * (new_value) + (1-alpha) * current_value;}

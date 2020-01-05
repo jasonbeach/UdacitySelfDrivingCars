@@ -101,6 +101,7 @@ class ImagePipeline{
     ~ImagePipeline();
 
     void SetConfig(const ImagePipelineParams& p) ;
+    cv::Size GetFrameSize() const;
     void Run(ImageCallback frame_process_function);
 
   private:

@@ -46,19 +46,19 @@ int load_params(int argc, char* argv[], AdvancedLaneFinderParams* ap, ImagePipel
     ap->M_inv = ap->M.inv();}
 
   if(config["xm_per_pix"]){
-    ap->xm_per_pix = config["xm_per_pix"].as<float>(); }
+    ap->lp.xm_per_pix = config["xm_per_pix"].as<float>(); }
 
   if(config["ym_per_pix"]){
-    ap->ym_per_pix = config["ym_per_pix"].as<float>(); }
+    ap->lp.ym_per_pix = config["ym_per_pix"].as<float>(); }
 
   if(config["margin"]){
-    ap->margin = config["margin"].as<uint16_t>();}
+    ap->lp.margin = config["margin"].as<uint16_t>();}
 
   if(config["minpix"]){
-    ap->minpix = config["minpix"].as<uint16_t>(); }
+    ap->lp.minpix = config["minpix"].as<uint16_t>(); }
 
   if(config["nwindows"]){
-    ap->nwindows = config["nwindows"].as<uint16_t>(); }
+    ap->lp.nwindows = config["nwindows"].as<uint16_t>(); }
 
   if(config["min_sobel"]){
     ap->min_sobel = config["min_sobel"].as<uint16_t>(); } //uint16_t because cli11 processes a uint8_t as an unsigned char

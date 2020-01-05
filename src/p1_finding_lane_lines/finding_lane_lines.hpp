@@ -10,10 +10,6 @@ void FindLanes(const cv::Mat& input, cv::Mat& output, const FindLaneParams& p);
 // expensive portion of the algorithm 
 ModelSet do_ransac(const cv_line_list& input_lines, bool positive_slope);
 
-template< class T>
-T alpha_filter(const T& current_value, const T& new_value, float alpha){
-  return alpha * (new_value) + (1-alpha) * current_value;}
-
 // updates a Mat with the ransac output
 void plot_model(int y_size, const cv::Mat1d& model, const cv::Scalar color, 
   cv::Mat* image, std::vector<cv::Point> * points );

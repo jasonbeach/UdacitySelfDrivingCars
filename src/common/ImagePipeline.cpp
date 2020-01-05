@@ -121,15 +121,23 @@ void FrameSink::Close() {impl_.release(); }
 class ImagePipeline::ImagePipelineImpl{
 public:
   ImagePipelineImpl() = default;
-  ImagePipelineImpl(const ImagePipelineParams& p): p_(p){ }
+  ImagePipelineImpl(const ImagePipelineParams& p): p_(p){ 
+    if(!SetupPipeline()){
+      fmt::print("ImagePipelineImpl: Error Setting up image pipeline\n");} }
 
   void SetConfig(const ImagePipelineParams& p){
-    p_ = p; }
+    p_ = p; 
+
+    if(!SetupPipeline()){
+      fmt::print("SetConfig: Error Setting up image pipeline\n");}}
+
+  cv::Size GetFrameSize() const{
+    return video_reader_.GetFrameSize(); }
 
   void Run(ImageCallback frame_process_function){
 
-    if(!SetupPipeline()){
-      return; }
+    if(p_.show_trackbars){
+      cv::createTrackbar("Frame Rate(Hz)", p_.trackbar_window, &p_.frame_rate_Hz, 50, nullptr);}
 
     while(1){ 
       auto t1 = std::chrono::high_resolution_clock::now();
@@ -165,8 +173,6 @@ public:
 private:
 
   bool SetupPipeline(){
-    if(p_.show_trackbars){
-      cv::createTrackbar("Frame Rate(Hz)", p_.trackbar_window, &p_.frame_rate_Hz, 50, nullptr);}
 
     if(!video_reader_.Open(p_.video_filename)){
       return false; }  
@@ -206,6 +212,9 @@ ImagePipeline::~ImagePipeline() = default;
 
 void ImagePipeline::SetConfig(const ImagePipelineParams& p){
   Impl()->SetConfig(p);}
+
+cv::Size ImagePipeline::GetFrameSize() const{
+  return Impl()->GetFrameSize();}
 
 void ImagePipeline::Run(ImageCallback frame_process_function){
   Impl()->Run(frame_process_function);}
