@@ -373,8 +373,20 @@ class AdvancedLaneFinder::AdvancedLaneFinderImpl{
         // combine channels
         cv::Mat warped_final;
         cv::Mat arry[3] = {warped_img, searchbox_channel, nonzero_channel};
-        cv::merge(arry, 3, warped_final); 
-        cv::imshow("warped", warped_final);} }
+        cv::merge(arry, 3, warped_final);
+        cv::hconcat(out_frame, warped_final, out_frame);
+
+        cv::Mat empty_chan = cv::Mat::zeros(warped_img.size(), CV_8U);
+        cv::Mat arry2[3] = {binary_img, empty_chan, empty_chan};
+        cv::Mat temp;
+        cv::merge(arry2, 3, warped_final);
+        arry2[0] = empty_chan;
+        cv::merge(arry2, 3, temp);
+        cv::hconcat(warped_final, temp,warped_final);
+        cv::vconcat(out_frame, warped_final, out_frame);
+        cv::resize(out_frame, out_frame, binary_img.size(),0,0, cv::INTER_LANCZOS4);
+
+        /*cv::imshow("warped", warped_final);*/} }
     
     void threshold_image(const cv::Mat& undistorted_img, cv::Mat& output_img){
       cv::Mat undistorted_gray;

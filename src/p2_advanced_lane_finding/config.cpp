@@ -15,6 +15,7 @@ int load_params(int argc, char* argv[], AdvancedLaneFinderParams* ap, ImagePipel
   app.add_flag("-l, --loop", ip->loop_video, "continuously loop video");
   app.add_flag("-t, --trackbar", ip->show_trackbars, "show parameter trackbars");
   app.add_flag("-r, --record", ip->record_video, "record processed video");
+  app.add_flag("-w, --warp", ap->show_warped, "show intermediate processed video");
 
   CLI11_PARSE(app, argc, argv);
 

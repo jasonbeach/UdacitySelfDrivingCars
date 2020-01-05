@@ -165,7 +165,7 @@ public:
       auto process_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
       int64_t frame_period_ms = static_cast<int64_t>(1.0/p_.frame_rate_Hz * 1000);
       auto delay_time_ms =  std::max((int64_t) 1, frame_period_ms - process_time_ms);
-      fmt::print("process time: {}ms\n", process_time_ms);
+      //fmt::print("process time: {}ms\n", process_time_ms);
       char c = (char)cv::waitKey(delay_time_ms); // Press  ESC on keyboard to  exit
       if( c == 27 ){
         break;}} }
