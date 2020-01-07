@@ -19,7 +19,8 @@ Params load_params(const std::string config_yaml){
     p.D = config["D"].as<cv::Mat>();}
 
   if(config["M"]){
-    p.M = config["M"].as<cv::Mat>();}
+    p.M = config["M"].as<cv::Mat>();
+    p.M_inv = p.M.inv();}
 
   if(config["min_sobel"]){
     p.min_sobel = config["min_sobel"].as<uint16_t>(); }

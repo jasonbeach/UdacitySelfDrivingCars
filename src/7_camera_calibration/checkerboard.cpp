@@ -56,6 +56,7 @@ int main(int argc, char** argv ){
   std::cout << "k matrix: \n" << K << std::endl;
    
   cv::imshow("Image", udist_image);
+  cv::imwrite("chessboard_corners_undistorted.jpg", udist_image);
   cv::waitKey(0);
   return 0;
 }

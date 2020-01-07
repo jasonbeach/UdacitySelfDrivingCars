@@ -101,8 +101,8 @@ int main(int argc, char** argv ){
       cv::imwrite(p.output_folder + "/" + file, udist_image ); } } 
   
   YAML::Node camera_cal_yaml;
-  camera_cal_yaml["K_matrix"] = K;
-  camera_cal_yaml["D_matrix"] = D;
+  camera_cal_yaml["K"] = K;
+  camera_cal_yaml["D"] = D;
   camera_cal_yaml["rvecs"] = rvecs;
   camera_cal_yaml["tvecs"] = tvecs;
 

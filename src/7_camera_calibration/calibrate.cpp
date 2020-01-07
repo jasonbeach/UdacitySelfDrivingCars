@@ -19,6 +19,7 @@ void extractPointsFromImage(cv::Mat img, cv::Size board_size, CameraPoints* cp, 
   if(show_images){    
     cv::drawChessboardCorners(img, board_size, corners, pattern_found);
     cv::imshow("Image", img);
+    cv::imwrite("chessboard_corners.jpg", img);
     cv::waitKey(0);}
   
   if (pattern_found){
