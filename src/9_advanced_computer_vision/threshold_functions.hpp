@@ -20,3 +20,5 @@ void adjust_l_max( int count, void* param);
 void change_image( int count, void* param);
 
 cv::Mat thresh_color(cv::Mat img_bgr, uint8_t channel, uint8_t min_thresh, uint8_t max_thresh);
+
+std::string generate_output_filename(const std::string& input_file, const std::string& suffix);

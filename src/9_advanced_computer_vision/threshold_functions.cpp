@@ -1,5 +1,6 @@
 #include "threshold_functions.hpp"
 #include "fmt/core.h" 
+#include <filesystem>
 
 void adjust_sobel_min( int count, void* param){
   Params* p = static_cast<Params*>(param);  
@@ -81,3 +82,11 @@ cv::Mat thresh_color(cv::Mat img_bgr, uint8_t channel, uint8_t min_thresh, uint8
   ThresholdImage(img_chan, img_chan, min_thresh, max_thresh);
 
   return img_chan; }
+
+  std::string generate_output_filename(const std::string& input_file, const std::string& suffix){
+
+    auto path = std::filesystem::path(input_file);
+    auto stem_out = path.stem();
+    stem_out += suffix;
+    stem_out += path.extension();
+    return stem_out.string();}

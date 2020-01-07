@@ -58,7 +58,8 @@ float compute_curvature_radius(float a, float b, float mx, float my, float y){
   float Rc = std::pow(SQ(2.0*A*Y + B)+1, 1.5) / std::abs(2.0*A);
   return Rc;}
 
-cv::Mat find_lane_line(const cv::Mat& warped_image, const cv::Rect& roi, const Params& p, char lane){
+cv::Mat find_lane_line(const cv::Mat& warped_image, const cv::Rect& roi, const Params& p, char lane, std::vector<cv::Point>* output_points, float* curvature_rad, float* offset){
+  
 
   cv::Mat mask = cv::Mat::zeros(warped_image.size(), CV_8U); // all 0
 
@@ -121,9 +122,9 @@ cv::Mat find_lane_line(const cv::Mat& warped_image, const cv::Rect& roi, const P
 
   //use 'y' as the independent variable
   for(size_t i = 0; i < nonzero_points.size(); ++i){
-    A.at<float>(i, 0) = nonzero_points[i].y * nonzero_points[i].y;
-    A.at<float>(i, 1) = nonzero_points[i].y;
-    b.at<float>(i, 0) = nonzero_points[i].x;
+    A.at<float>(i, 0) = nonzero_points.at(i).y * nonzero_points.at(i).y;
+    A.at<float>(i, 1) = nonzero_points.at(i).y;
+    b.at<float>(i, 0) = nonzero_points.at(i).x;
   }
 
   fmt::print("A: {}, b: {}\n", A, b);
@@ -140,6 +141,9 @@ cv::Mat find_lane_line(const cv::Mat& warped_image, const cv::Rect& roi, const P
 
   float Rc = compute_curvature_radius(a_pix, b_pix, p.xm_per_pix, p.ym_per_pix, y_pix);
 
+  *curvature_rad = Rc;
+  *offset = a_pix*SQ(720.0) + b_pix*720.0 + c_pix;
+
   int loc = 30;
   if (lane == 'r'){
     loc = 60;}
@@ -150,7 +154,8 @@ cv::Mat find_lane_line(const cv::Mat& warped_image, const cv::Rect& roi, const P
   for (int y = 0; y < nonzero_channel.rows; y+=20){
     float x = a_pix*SQ(y) + b_pix*y + c_pix;
     if(x >=0 && x <= nonzero_channel.cols){
-      poly.emplace_back(x , y  );}
+      poly.emplace_back(x , y  );
+      output_points->emplace_back(x,y);}
   }
 
   //std::vector<std::vector<cv::Point>> polys;
@@ -180,29 +185,72 @@ void display_image(const Params& p){
   cv::bitwise_or(s_chan, l_chan, color_chan);
   cv::bitwise_or(color_chan, abs_img, merged);
 
-  //cv::Mat empty = cv::Mat::zeros(s_chan.size(), CV_8UC1);
-  
-  //cv::Mat arry[3] = {color_chan, mag_img /*sobel_chan*/, empty};
-
-  //cv::merge(arry, 3, merged);
+  if(p.demo){
+    cv::Mat demo_merged;
+    cv::Mat empty = cv::Mat::zeros(s_chan.size(), CV_8UC1);
+    cv::Mat arry[3] = {color_chan, abs_img, empty};
+    cv::merge(arry, 3, demo_merged);
+    
+    cv::imwrite(generate_output_filename(p.current_file, "_color_thresh"), demo_merged);
+    cv::imwrite(generate_output_filename(p.current_file, "_binary_thresh"), merged);
+  }  
 
   cv::Mat warped_img;
   cv::warpPerspective(merged, warped_img, p.M, merged.size());
   cv::threshold(warped_img, warped_img, 128, 255, CV_THRESH_BINARY);
 
+  if(p.demo){ 
+    cv::imwrite(generate_output_filename(p.current_file, "_warped"), warped_img);
+  }
+
   //cv::Mat combined = nonzero_test(warped_img);
-  cv::Mat left_line = find_lane_line(warped_img, cv::Rect(0,warped_img.rows/2,warped_img.cols/2, warped_img.rows/2), p, 'l');
-  cv::Mat right_line = find_lane_line(warped_img, cv::Rect(warped_img.cols/2, warped_img.rows/2, warped_img.cols/2, warped_img.rows/2), p, 'r');
+  std::vector<cv::Point> left_points, right_points;
+  float Rc_left, Rc_right, l_off, r_off;
+  cv::Mat left_line = find_lane_line(warped_img, cv::Rect(0,warped_img.rows/2,warped_img.cols/2, warped_img.rows/2), p, 'l', &left_points, &Rc_left, &l_off);
+  cv::Mat right_line = find_lane_line(warped_img, cv::Rect(warped_img.cols/2, warped_img.rows/2, warped_img.cols/2, warped_img.rows/2), p, 'r', &right_points, &Rc_right, &r_off);
+
+  float curvature = (Rc_right + Rc_left) / 2.0;
+
+  float lane_center = (l_off + r_off) / 2.0;
+
+  float center_offset = (lane_center - (warped_img.cols /2.0)) * p.xm_per_pix;
+
+
 
  
   auto t2 = std::chrono::high_resolution_clock::now();
   auto process_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
   fmt::print("processing time: {} ms\n", process_time_ms);
 
-  auto combined = .5 * left_line + .5 * right_line;
+  cv::Mat combined = .5 * left_line + .5 * right_line;
+
+  if(p.demo){ 
+    cv::imwrite(generate_output_filename(p.current_file, "_warped_annotated"), combined);}
+
+  cv::Mat warped_annotations = cv::Mat::zeros(warped_img.size(), CV_8UC3);
+  std::vector<std::vector<cv::Point>> curve_points;
+  curve_points.push_back(left_points);
+  curve_points.at(0).insert(curve_points.at(0).end(), right_points.rbegin(), right_points.rend());
+  
+  cv::Mat full_annotated;
+  if(curve_points.at(0).size() > 4){
+    cv::fillPoly(warped_annotations, curve_points, cv::Scalar(0,255,0));
+    
+    cv::addWeighted(combined, 1.0, warped_annotations, .3, 0, combined);
+
+    cv::Mat annotations;// = cv::Mat::zeros(undistorted.size(), CV_8U);
+    cv::warpPerspective(warped_annotations, annotations, p.M_inv, warped_annotations.size());
+      
+    cv::putText(annotations, fmt::format("Radius: {:.2f}m", curvature),{10, 30},cv::FONT_HERSHEY_SIMPLEX,1, {0, 255, 0},3);
+    cv::putText(annotations, fmt::format("Center offset: {:.2f}m", center_offset),{10, 60},cv::FONT_HERSHEY_SIMPLEX,1, {0, 255, 0},3);
+
+    cv::addWeighted(p.image, 1.0, annotations,.3,0, full_annotated);  }
+
+  if(p.demo){ 
+    cv::imwrite(generate_output_filename(p.current_file, "_fully_annotated"), full_annotated);}
 
   cv::imshow("image", combined); 
-  cv::imshow("unwarped image", merged);
+  cv::imshow("unwarped image", full_annotated);
 
   } 
   
@@ -212,25 +260,33 @@ int main(int argc, char** argv ){
   CLI::App app{"color thresholds"};
   
   std::string config_yaml = "config.yaml";
+  bool demo_mode = false;
   app.add_option("-f, --file", config_yaml, "path to yaml file");
-  
+  app.add_flag("-d, --demo", demo_mode, "demo mode");
   CLI11_PARSE(app, argc, argv);
 
   Params p = load_params(config_yaml);
+  p.demo = demo_mode;
 
   if(p.image_files.empty()){
     fmt::print("No files given in: {}\n", p.image_file_path);
     return -1;}
 
-  cv::Mat image = cv::imread( p.image_files.at(0), cv::IMREAD_COLOR );
+  p.current_file = p.image_files.at(0);
+  cv::Mat image = cv::imread( p.current_file, cv::IMREAD_COLOR );
 
   if ( !image.data ){
-    fmt::print("opening {} failed\n", p.image_files.at(0));
+    fmt::print("opening {} failed\n", p.current_file );
     exit(-1);}
 
   fmt::print("image size: {}x{} type: {}\n", image.cols, image.rows, type2str(image.type()));
     
   cv::undistort(image, p.image, p.K, p.D);
+
+  if(p.demo){
+    cv::imwrite(generate_output_filename(p.current_file, "_undistort"), p.image);
+  }
+
   
   cv::namedWindow("image", CV_WINDOW_AUTOSIZE);
   cv::namedWindow("adjustments", CV_WINDOW_AUTOSIZE);
