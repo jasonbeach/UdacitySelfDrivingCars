@@ -1,6 +1,6 @@
 #video_filename: "test_videos/project2/challenge_video.mp4"
 #video_filename: "test_videos/project2/harder_challenge_video.mp4"
-video_filename: "../test_videos/project2/project_video.mp4"
+video_filename: "../../../test_videos/project2/project_video.mp4"
 frame_rate_Hz: 25
 trackbar_window: "Adjustments"
 image_window: "Processed Image"

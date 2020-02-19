@@ -124,7 +124,6 @@ class LaneLine:
 
   def find_points(self, image):
 
-
     start_col = 0
     margin = 0
     if self._do_reset:
@@ -133,17 +132,13 @@ class LaneLine:
     else:
       start_col = self._best_fit.CalcX(image.shape[0])
       margin = self.lp.margin
-    
-    #print("start col: ", start_col)
-    #image = cv2.line(cv2.linecv2.line.lineimage,(start_col,0),(start_col, image.shape[0]),255)
-  
+      
     window_height = image.shape[0] / self.lp.nwindows
 
     current_x = start_col - margin / 2
     current_y = image.shape[0] - window_height
     self._search_windows = np.empty((0, 5, 2), dtype=np.int32)
 
-    #print("initial search window shape: {}".format(self._search_windows.shape))
     nonzero_points = np.empty((0,2), dtype=np.int32)
     finished = False
     while current_y >= 0 and not finished:
@@ -165,8 +160,7 @@ class LaneLine:
       
       self._search_windows = np.concatenate((self._search_windows, 
         new_search_window),axis=0)
-      # print("x: {} y:{} margin: {}, h: {} search window: {}".format(
-      #   current_x, current_y, margin, window_height, self._search_windows.shape))
+
       window_image = image[window_roi]
 
       nonzero_this_window = cv2.findNonZero(window_image)

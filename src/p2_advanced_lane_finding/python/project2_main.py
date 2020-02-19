@@ -13,8 +13,6 @@ def load_params():
   with open('project2_config.yaml','r') as file:
     config = yaml.load(file, Loader=yaml.FullLoader)
 
-    print(yaml.dump(config))
-
     ip.video_filename = config['video_filename']
     ip.frame_rate_hz = config['frame_rate_Hz']
     ip.trackbar_window = config['trackbar_window']
@@ -22,7 +20,6 @@ def load_params():
     ip.loop_video = config['loop_video']
     ip.record_video = config['record_video']
     ip.show_trackbars = config['show_trackbars']
-    
     
     ap.trackbar_window = config['trackbar_window']
     ap.K = dict_to_numpy(config['K'])
