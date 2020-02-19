@@ -5,11 +5,23 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Python: project2 main",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/python/project2_main.py",
+      "console": "integratedTerminal",
+      "cwd":"${workspaceFolder}/python"
+    },
+    {
       "name": "(gdb) Launch",
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/build/src/p1_finding_lane_lines/p1_finding_lanes_lines",
-      "args": ["-l","-f","${workspaceFolder}/test_videos/project1/challenge.mp4"],
+      "args": [
+        "-l",
+        "-f",
+        "${workspaceFolder}/test_videos/project1/challenge.mp4"
+      ],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}/test_videos",
       "environment": [],

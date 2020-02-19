@@ -51,6 +51,10 @@ struct LaneLineModel{
   float CalcX(float y) const{
     return a*SQ(y) + b*y + c; } 
 
+  std::string str(){
+    return fmt::format("a: {:.4f}, b: {:.4f}, c: {:.4f}", a, b, c);
+  }
+
   PointVector CurvePoints(int y_min, int y_max, int x_min, int x_max, int step = 20) const{
     PointVector curve;
     for (int y = y_min; y < y_max; y+=step){
@@ -86,7 +90,7 @@ class LaneLine{
 
         num_good_fits++;
 
-        if(num_good_fits > 25){
+        if(num_good_fits > 5){
           missed_detects_ = 0;
           do_reset_ = false;} }
       else  {
