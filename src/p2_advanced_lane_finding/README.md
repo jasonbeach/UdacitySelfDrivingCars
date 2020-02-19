@@ -116,11 +116,15 @@ Here's a [link to my video result](https://youtu.be/6rY7u-j04Uk)
 
 This was a great project as you can tell all of the code is written in C++ which was done for three reasons, 1) performance, 2) that's what would be used in a real self-driving car and 3) to force myself to get more more familiar with OpenCV and get industrial grade experience with it.
 
+Unfortunately Udacity is not set up to handle C++ code which really surprised me (given the reasons cited above). To facilitate passing off this project, The pipeline and frame processor were rewritten in python although the rubric did not specify this requirement. The python version is located in the python subdirectory and can be started by running `project2_main.py`. `project2_main.py` should be run from the python directory to ensure the video file is properly found. Additionally it uses the python yaml module which can be installed via `pip install pyyaml` if it is not already installed.    
+
 OpenCV is fantastic.  Using it's GUI functionality, I was able to create trackbars that allowed me to quickly tune and experiment with thresholds in real-time as a video was playing.
 
 Getting the non-zero pixels in the warped image seems weird to me since the upper portion of the image is so stretched out.  I really wanted to try an algorithm called Recursive-RANSAC to detect the lines before warping them and then just warping a small set of points from a generated curve. Unfortunately I don't have the time to do it now.
 
 My pipeline works quite well on the project video, but does pretty abysmal on the challenge and the harder challenge video.  I didn't have time to look in-depth at the cause, but it a cursory look seemed to indicate that the perspective transform was off. It would be interesting to use the hardcoded transform and see if that improves things. 
+
+Redoing the project in python was beneficial. The performance difference between the C++ and python version is astounding.  Given that I did not take time to really profile and optimize the python code, it processes approximately 2 frames/sec.  The C++ version easily processes the 25 frames / sec that the video contains with buffer to spare.
 
 ### Building
 
