@@ -12,8 +12,8 @@ import pickle
 def main():
   # this is the prefix to the path within the docker container I used to do
   # the training in 
-  new_path = "/tf/udacity/python/P4_behavioral_cloning"
-
+  #new_path = "/tf/udacity/python/P4_behavioral_cloning"
+  new_path = "/workspaces/cpp/src/p3_behavioral_cloning"
   # I originally had data pre-divided into training, validation and test sets
   #  but since test sets weren't really used I just merged them into the 
   # training data
@@ -36,7 +36,7 @@ def main():
   validation_generator = DataGenerator(validation_samples, batch_size)
 
   from keras.models import Sequential
-  from keras.layers import Flatten, Dense, Lambda, Cropping2D, Convolution2D, Dropout
+  from keras.layers import Flatten, Dense, Lambda, Cropping2D, Conv2D, Dropout
 
 
   # This is the model from the Nvidia paper -  it's really simple.  I planned
@@ -45,11 +45,11 @@ def main():
   model = Sequential()
   model.add(Lambda(lambda x: (x / 255.0) - 0.5, input_shape=(160,320,3)))
   model.add(Cropping2D(cropping=((70,25),(0,0))))
-  model.add(Convolution2D(24,5,5,subsample=(2,2),activation='relu'))
-  model.add(Convolution2D(36,5,5,subsample=(2,2),activation='relu'))
-  model.add(Convolution2D(48,5,5,subsample=(2,2),activation='relu'))
-  model.add(Convolution2D(64,3,3,activation='relu'))
-  model.add(Convolution2D(64,3,3,activation='relu'))
+  model.add(Conv2D(24, (5, 5), activation="relu", strides=(2, 2)))
+  model.add(Conv2D(36, (5, 5), activation="relu", strides=(2, 2)))
+  model.add(Conv2D(48, (5, 5), activation="relu", strides=(2, 2)))
+  model.add(Conv2D(64, (3, 3), activation="relu"))
+  model.add(Conv2D(64, (3, 3), activation="relu")) 
   model.add(Flatten())
   model.add(Dropout(.2))
   model.add(Dense(100))

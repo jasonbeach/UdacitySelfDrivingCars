@@ -37,6 +37,9 @@ ARG LIBNVINFER_MAJOR_VERSION=6
 # Needed for string substitution
 SHELL ["/bin/bash", "-c"]
 
+ADD fix_tzdata.sh /fix_tzdata.sh
+RUN /fix_tzdata.sh
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
         cuda-command-line-tools-${CUDA/./-} \
@@ -81,12 +84,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         iputils-ping \
         ninja-build \
         libeigen3-dev \
+        debconf-utils \
+        python3-tk \
         && \
     find /usr/local/cuda-${CUDA}/lib64/ -type f -name 'lib*_static.a' -not -name 'libcudart_static.a' -delete && \
     rm /usr/lib/${LIB_DIR_PREFIX}-linux-gnu/libcudnn_static_v7.a
 
 
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3-tk
+
+#RUN  apt-get install -y --no-install-recommends python3-tk
 
 # install a newer version of cmake
 RUN mkdir /cmake \
@@ -150,9 +156,9 @@ RUN apt-get update && apt-get install -y \
     swig \
     netbase
 
-RUN apt install software-properties-common && \
+RUN apt install -y software-properties-common && \
     add-apt-repository ppa:ubuntu-toolchain-r/test && \
-    apt install gcc-9 g++-9 && \
+    apt -y install gcc-9 g++-9 && \
     update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 90 --slave /usr/bin/g++ g++ /usr/bin/g++-9 --slave /usr/bin/gcov gcov /usr/bin/gcov-9
 
 RUN ${PIP} --no-cache-dir install \
@@ -178,6 +184,7 @@ RUN ${PIP} --no-cache-dir install \
     keras \
     moviepy \
     pickle-mixin \
+    pylint \
     && test "${USE_PYTHON_3_NOT_2}" -eq 1 && true || ${PIP} --no-cache-dir install \
     enum34
 
@@ -218,6 +225,8 @@ COPY readme-for-jupyter.md README.md
 RUN apt-get autoremove -y && apt-get remove -y wget
 WORKDIR /tf
 EXPOSE 8888
+
+RUN useradd -ms /bin/bash vscode
 
 RUN ${PYTHON} -m ipykernel.kernelspec
 
