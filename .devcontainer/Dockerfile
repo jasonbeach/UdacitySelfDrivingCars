@@ -189,6 +189,20 @@ RUN ${PIP} --no-cache-dir install \
     enum34
 
 # RUN ${PIP} --no-cache-dir install --upgrade setuptools
+RUN apt-get install -y libuv1-dev libssl-dev 
+
+RUN mkdir /uWebSockets && \
+    pushd /uWebSockets && \
+    git clone https://github.com/uWebSockets/uWebSockets . && \
+    git checkout e94b6e1 && \
+    mkdir build && \
+    cd build && \
+    cmake .. && \
+    make -j$(nproc) && \
+    make install && \
+    ln -s /usr/lib64/libuWS.so /usr/lib/libuWS.so && \
+    popd && \
+    rm -rf /uw
 
 
 # Install bazel
