@@ -1,4 +1,5 @@
-# **Kidnapped Vehicle - Particle Filter **  
+# **Kidnapped Vehicle - Particle Filter**
+
 The goals / steps of this project are the following:
 * Using C++ build a particle filter.
 * The state vector of the particle filter is position in the x and y directions and heading
@@ -6,7 +7,6 @@ The goals / steps of this project are the following:
 * Test the filter by connecting it to the term 2 simulator which will provide the measurements
 * Filter must be performant enough to run in less than 90 seconds
 
-[map]: ./data/map.png "map"
 [success]: ./data/success.png "success"
 
 ## Rubric Points
@@ -19,6 +19,7 @@ My project successfully finished with an accuracy of x: .128 m y: .122 m and yaw
 
 ![alt text][success]
 
+A video of the particle filter in action can be seen [here](https://youtu.be/HKNIh-7KBAw).
 
 ### 2. Does your particle run within the specified time of 100 seconds?
 
